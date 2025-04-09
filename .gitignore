@@ -1,6 +1,8 @@
 # Project data
 data/
 
+# [TEMP]
+scripts/dashboard/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
