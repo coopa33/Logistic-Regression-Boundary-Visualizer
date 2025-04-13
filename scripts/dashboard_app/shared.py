@@ -47,4 +47,10 @@ def read_structure_data(pathname):
 X, y, df = read_structure_data("../../data/titanic.csv")
 w, b = gradient_descent(X, y, np.zeros(X.shape[1]), 0)
 
+# Extract available features into a dictionary
+
+feature_names = df.columns
+features_dict = {}
+for name in feature_names:
+    features_dict[name] = name
 

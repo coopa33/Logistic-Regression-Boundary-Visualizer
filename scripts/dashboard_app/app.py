@@ -3,7 +3,7 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 from shiny.express import input, render, ui
-from shared import X, y, df, w, b
+from shared import X, y, df, w, b, features_dict
 
 
 
@@ -12,12 +12,7 @@ ui.page_opts(title="Logistic Regression Decision Boundary Plotter")
 ui.input_selectize(
         "feature_selector", 
         "select a feature below:",
-        {"Pclass": "Passenger Class", 
-         "Sex": "Gender",
-         "Age": "Age",
-         "SibSp": "Number of Siblings or spouses",
-         "Parch": "No. of parents of children",
-         },
+        features_dict,
         multiple=True)
 
 @render.plot
