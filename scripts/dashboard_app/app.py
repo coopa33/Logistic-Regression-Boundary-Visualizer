@@ -2,10 +2,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import pandas as pd
+import os
+import sys
 from shiny import render, reactive
 from shiny.express import ui, input
 from shared import df, extract_feature_names, drop_features, read_structure_data
-
+rootpath = os.path.join(os.getcwd(), "..")
+sys.path.append(rootpath)
+from gradient_descent import gradient_descent
 
 ### Render structured Dataframe ###
 ui.input_selectize(
@@ -70,7 +74,7 @@ def update_feature_selection():
             feature_choice = {i: list(df_cleaned.columns)[i] for i in range(len(list(df_cleaned.columns)))}
             ui.update_selectize("feature_plot", choices = feature_choice)
         except:
-            print("a") 
+            pass 
     
 
 @render.data_frame
@@ -94,6 +98,7 @@ def cleaned_df():
             df_cleaned = read_structure_data(df, y[0], features_to_drop, one_hot)
             return render.DataGrid(df_cleaned)
         except:
+            # If features remain that need to be one-hot transformed, only the original dataframe will be rendered
             return render.DataGrid(df_original)
 
 @render.plot
@@ -104,40 +109,36 @@ def plot_data():
     one_hot = list(input.one_hot_select())
     features_select = list(input.feature_plot())
 
-    if not (features_to_drop == [] or y == [] or one_hot == [] or len(features_select ) < 2):
+    if not (features_to_drop == [] or y == [] or one_hot == [] or len(features_select ) != 2):
         df_cleaned = read_structure_data(df, y[0], features_to_drop, one_hot)
         feature_names = list(df_cleaned.columns)
+
+        # Gradient descent
+        X_array = np.array(df_cleaned)
+        y_array = X_array[:, -1].reshape((X_array.shape[0], 1))
+        X_array = X_array[:, :-2]
+        w_init = np.random.rand(X_array.shape[1])
+        b_init = np.random.rand()
+        print(X_array.shape)
+        print(y_array.shape)
+        print(w_init.shape)
+
+        w_hat, b_hat = gradient_descent(X_array, y_array, np.random.rand(X_array.shape[1]), np.random.rand())
+        
         # Plot
         fig, ax = plt.subplots()
-
         x_ax = df_cleaned[feature_names[int(features_select[0])]]
         y_ax = df_cleaned[feature_names[int(features_select[1])]]
+        x_boundary = np.linspace(min(x_ax), max(x_ax), 100)
+        y_boundary = (-x_boundary * w_hat[int(features_select[0])] - b_hat) / w_hat[int(features_select[1])]
         ax.scatter(x_ax, y_ax, c = df_cleaned[y[0]])
+        ax.plot(x_boundary, y_boundary, color = "red")
         ax.set_title("Distribution of features")
         ax.set_xlabel(feature_names[int(features_select[0])])
         ax.set_ylabel(feature_names[int(features_select[1])])
         return fig
 
 
-
-
-
-
-
-
-@render.text
-def result():
-    first = input.feature_transform_selection()
-    second = input.y_select()
-    third = input.feature_plot()
-    if first and second and third:
-        return f"You selected: {first}, and {second}, and {third}"
-    elif first and second:
-        return f"You selected: {first} and {second}, please choose the third option"
-    elif first:
-        return f"You selected: {first}, please choose a sub-option"
-    else:
-        return f"Please select your first option"
     
     
     
