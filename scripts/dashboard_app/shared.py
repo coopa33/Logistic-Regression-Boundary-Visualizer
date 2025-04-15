@@ -13,23 +13,48 @@ df = np.array([[1, 2, 5, 2],
               [0.6, 4, 2, 4],
               [7, 1.5, -2, 3]])
 
+####################################
+# Data Structuring Functionalities #
+####################################
+def dummies(feature):
+    # Assuming that no feature contains multiple datatypes
+    if feature.dtype == "object":
+        structured_feature = pd.get_dummies(feature)
+        return structured_feature
+    elif feature.dtype == "int" and set(feature.unique()) != {0, 1}:
+        # This assumes that discrete numericals are NOT ordinal!
+        structured_feature = pd.get_dummies(feature)
+        return structured_feature
+    else:
+        return None
 
 
-def read_structure_data(pathname):
-    df = pd.read_csv(pathname)
+def drop_features(df, features):
     df = df.copy(deep=True)
+    df = df.drop(columns = features)
+    return df
+
+
+
+
+
+def read_structure_data(df, y_name, columns_to_drop, columns_to_one_hot):
 
     # Drop unwanted columns
-    df = df.drop(columns = ["PassengerId", "Name", "Cabin", "Ticket", "Cabin", "Embarked"])
+    df = df.drop(columns = columns_to_drop)
 
-    # Drop Na rows 
+    # Drop Na rows (must be completed before feature selection, on the complete dataframe)
     df = df.dropna(how="any")
 
-    # Convert Sex to binary numbers, 1=male, 0=female
-    df["Sex"] = df["Sex"].apply(lambda x: 1 if x == "male" else 0)
+    # Transform categorical features into one-hot
+    col_names = df.columns
+    for col in columns_to_one_hot:
+        dummies = pd.get_dummies(df[col], prefix = col + "_")    
+        df = df.drop(columns = col)
+        df = pd.concat((df, dummies), axis = 1)
 
     # z-score normalize all columns except y
-    y = df.pop("Survived")
+    y = df.pop(y_name)
     df = df.apply(lambda x: (x - np.mean(x))/np.std(x), axis = 0)
 
     # Transform into numpy arrays
@@ -38,19 +63,29 @@ def read_structure_data(pathname):
     X = np.array(df)
 
     # Reassemble Dataframe
-    df["Survived"] = pd.Series(y.flatten())
+    y_series = pd.Series(y.flatten())
+    y_series.index = df.index
+    df[y_name] = y_series
 
-    return X, y, df
+    return df
 
 
+
+
+columns_to_drop = ["PassengerId", "Name", "Cabin", "Ticket", "Cabin"]
+columns_to_one_hot = ["Pclass", "Sex", "Embarked"]
 # Shared datastructures
-X, y, df = read_structure_data("../../data/titanic.csv")
-w, b = gradient_descent(X, y, np.zeros(X.shape[1]), 0)
+df = pd.read_csv("../../data/titanic.csv")
+print(df)
 
 # Extract available features into a dictionary
 
-feature_names = df.columns
-features_dict = {}
-for name in feature_names:
-    features_dict[name] = name
+def extract_feature_names(df):
+    feature_names = df.columns
+    features_dict = {}
+    features_type = []
+    for name in feature_names:
+        features_dict[name] = name
+    return features_dict
+
 
