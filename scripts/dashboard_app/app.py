@@ -116,14 +116,21 @@ def plot_data():
         # Gradient descent
         X_array = np.array(df_cleaned)
         y_array = X_array[:, -1].reshape((X_array.shape[0], 1))
-        X_array = X_array[:, :-2]
+        X_array = X_array[:, :-1]
+        print(f"X_array shape: {X_array.shape}")
         w_init = np.random.rand(X_array.shape[1])
+        print(f"w shape: {w_init.shape}")
         b_init = np.random.rand()
-        print(X_array.shape)
-        print(y_array.shape)
-        print(w_init.shape)
-
         w_hat, b_hat = gradient_descent(X_array, y_array, np.random.rand(X_array.shape[1]), np.random.rand())
+
+        # Average remaining features, factor coefficients and sum, and add to intercept
+        remaining_features = np.delete(X_array, [int(features_select[0]), int(features_select[1])], axis = 1)
+        print(remaining_features.shape)
+        remaining_weights = np.delete(w_hat, [int(features_select[0]), int(features_select[1])])
+        print(remaining_weights.shape)
+        remaining_averages = np.mean(remaining_features, axis = 0).flatten()
+        print(remaining_averages)
+        b_hat += np.dot(remaining_weights, remaining_averages)
         
         # Plot
         fig, ax = plt.subplots()
