@@ -12,6 +12,15 @@ sys.path.append(rootpath)
 from gradient_descent import gradient_descent
 
 ### Render structured Dataframe ###
+ui.input_file("csv_data", "Choose CSV file", accept=[".csv"], multiple=False)
+
+@reactive.calc
+def parsed_file():
+    file: list[FileInfo] | None = input.csv_data()
+    if file is None:
+        return pd.DataFrame()
+    return pd.read_csv(file[0]["datapath"])
+
 ui.input_selectize(
         "features_exclude", 
         "Select features to be excluded from subsequent transformation",
@@ -36,7 +45,6 @@ ui.input_selectize(
         choices = list(df.columns),
         multiple = True)
 
-df_original = df
 
 """
 Selection of features is paramount to the data cleaning functioning properly. Currently the user must chose the features to exclude, feature to use as y, and features to one-hot. If by the user choice, there remains features that need but are not selected (f.e. a categorical feature with strings, which needs to be one-hot encoded) then the resulting cleaned and normalized data will not render. Therefore choosing features correctly must be done before rendering the data and decision boundary plots. 
@@ -64,7 +72,7 @@ def update_one_hot_plot():
 
 @reactive.effect
 def update_feature_selection():
-    df = df_original
+    df = parsed_file()
     features_to_drop = list(input.features_exclude())
     y = list(input.y_select())
     one_hot = list(input.one_hot_select())
@@ -79,7 +87,7 @@ def update_feature_selection():
 
 @render.data_frame
 def exclude_features_df():
-    df = df_original
+    df = parsed_file()
     features_to_drop = list(input.features_exclude())
     if len(features_to_drop)<1:
         return render.DataGrid(df)
@@ -89,7 +97,7 @@ def exclude_features_df():
     
 @render.data_frame
 def cleaned_df():
-    df = df_original
+    df = parsed_file()
     features_to_drop = list(input.features_exclude())
     y = list(input.y_select())
     one_hot = list(input.one_hot_select())
@@ -99,11 +107,11 @@ def cleaned_df():
             return render.DataGrid(df_cleaned)
         except:
             # If features remain that need to be one-hot transformed, only the original dataframe will be rendered
-            return render.DataGrid(df_original)
+            return render.DataGrid(parsed_file())
 
 @render.plot
 def plot_data():
-    df = df_original
+    df = parsed_file()
     features_to_drop = list(input.features_exclude())
     y = list(input.y_select())
     one_hot = list(input.one_hot_select())
