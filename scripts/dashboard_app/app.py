@@ -6,7 +6,7 @@ import os
 import sys
 from shiny import render, reactive
 from shiny.express import ui, input
-from shared import df, extract_feature_names, drop_features, read_structure_data
+from shared import df, extract_feature_names, drop_features, read_structure_data, transform_array, product_remainder
 rootpath = os.path.join(os.getcwd(), "..")
 sys.path.append(rootpath)
 from gradient_descent import gradient_descent
@@ -109,28 +109,20 @@ def plot_data():
     one_hot = list(input.one_hot_select())
     features_select = list(input.feature_plot())
 
-    if not (features_to_drop == [] or y == [] or one_hot == [] or len(features_select ) != 2):
+    if not (features_to_drop == [] or y == [] or one_hot == [] or len(features_select) != 2):
+
+        # Clean data and extract new feature names
         df_cleaned = read_structure_data(df, y[0], features_to_drop, one_hot)
         feature_names = list(df_cleaned.columns)
 
         # Gradient descent
-        X_array = np.array(df_cleaned)
-        y_array = X_array[:, -1].reshape((X_array.shape[0], 1))
-        X_array = X_array[:, :-1]
-        print(f"X_array shape: {X_array.shape}")
+        X_array, y_array = transform_array(df_cleaned, df_cleaned.columns.get_loc(y[0]))
         w_init = np.random.rand(X_array.shape[1])
-        print(f"w shape: {w_init.shape}")
         b_init = np.random.rand()
-        w_hat, b_hat = gradient_descent(X_array, y_array, np.random.rand(X_array.shape[1]), np.random.rand())
+        w_hat, b_hat = gradient_descent(X_array, y_array, w_init, b_init)
 
         # Average remaining features, factor coefficients and sum, and add to intercept
-        remaining_features = np.delete(X_array, [int(features_select[0]), int(features_select[1])], axis = 1)
-        print(remaining_features.shape)
-        remaining_weights = np.delete(w_hat, [int(features_select[0]), int(features_select[1])])
-        print(remaining_weights.shape)
-        remaining_averages = np.mean(remaining_features, axis = 0).flatten()
-        print(remaining_averages)
-        b_hat += np.dot(remaining_weights, remaining_averages)
+        b_hat += product_remainder(X_array, w_hat, [int(features_select[0]), int(features_select[1])])
         
         # Plot
         fig, ax = plt.subplots()

@@ -88,4 +88,26 @@ def extract_feature_names(df):
         features_dict[name] = name
     return features_dict
 
+def transform_array(df, y_idx):
+    """
+    Transforms a dataframe into numpy arrays X and y
+    """
+    X_array = np.array(df)
+    y_array = X_array[:, y_idx].reshape((X_array.shape[0], 1))
+    X_array = np.delete(X_array, y_idx, axis = 1)
+    
+    return X_array, y_array
+
+def product_remainder(X, w, feature_idx):
+    """
+    Compute dot product of remaining features and coefficients, that are not to be plotted
+    """
+    features = np.delete(X, feature_idx, axis = 1)
+    weights = np.delete(w, feature_idx)
+    av = np.mean(features, axis = 0).flatten()
+    product = np.dot(av, weights)
+
+    return product
+
+
 
