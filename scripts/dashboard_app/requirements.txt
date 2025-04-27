@@ -9,3 +9,4 @@ seaborn==0.13.2
 shiny==1.4.0
 statsmodels==0.14.4
 sympy==1.13.1
+shinylive==0.8.3
