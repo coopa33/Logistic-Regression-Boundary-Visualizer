@@ -1,0 +1,11 @@
+matplotlib==3.10.1
+matplotlib-inline==0.1.7
+numpy==1.26.4
+numpydoc==1.8.0
+pandas==2.2.3
+regex==2024.11.6
+requests==2.32.3
+seaborn==0.13.2
+shiny==1.4.0
+statsmodels==0.14.4
+sympy==1.13.1
