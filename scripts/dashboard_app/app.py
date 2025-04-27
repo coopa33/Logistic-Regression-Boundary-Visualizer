@@ -2,13 +2,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import pandas as pd
-import os
-import sys
 from shiny import render, reactive
 from shiny.express import ui, input
 from shared import df, extract_feature_names, drop_features, read_structure_data, transform_array, product_remainder
-rootpath = os.path.join(os.getcwd(), "..")
-sys.path.append(rootpath)
 from gradient_descent import gradient_descent
 
 ### Render structured Dataframe ###
